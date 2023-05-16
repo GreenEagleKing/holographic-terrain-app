@@ -3,7 +3,9 @@ import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import terrainVertexShader from "./shaders/terrain/vertex.glsl"
 import terrainFragmentShader from "./shaders/terrain/fragment.glsl"
-import { CanvasTexture } from "three"
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer"
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass"
+import { LinearFilter, RGBAFormat, WebGLRenderTarget } from "three"
 
 /**
  * Base
@@ -155,6 +157,7 @@ scene.add(terrain.mesh)
 /**
  * Renderer
  */
+// Renderer
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
   antialias: true,
@@ -163,6 +166,19 @@ renderer.setClearColor(0x111111, 1)
 renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+//Effect Composer
+const renderTarget = new THREE.WebGLMultipleRenderTargets(800, 600, {
+  minFilter: THREE.LinearFilter,
+  magFilter: THREE.LinearFilter,
+  format: THREE.RGBAFormat,
+  encoding: THREE.sRGBEncoding,
+})
+const effectComposer = new EffectComposer(renderer)
+effectComposer.setSize(sizes.width, sizes.height)
+effectComposer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+effectComposer.addPass(new RenderPass(scene, camera))
 
 /**
  * Animate
@@ -180,6 +196,7 @@ const tick = () => {
 
   // Render
   renderer.render(scene, camera)
+  effectComposer.render()
 
   // Call tick again on the next frame
   window.requestAnimationFrame(tick)
