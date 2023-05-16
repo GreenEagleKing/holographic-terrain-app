@@ -4,9 +4,6 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import terrainVertexShader from "./shaders/terrain/vertex.glsl"
 import terrainFragmentShader from "./shaders/terrain/fragment.glsl"
 
-console.log(terrainFragmentShader)
-console.log(terrainVertexShader)
-
 /**
  * Base
  */
@@ -64,7 +61,7 @@ controls.enableDamping = true
 const terrain = {}
 
 //Geometry
-terrain.geometry = new THREE.PlaneGeometry(1, 1, 100, 100)
+terrain.geometry = new THREE.PlaneGeometry(1, 1, 1000, 1000)
 terrain.geometry.rotateX(-Math.PI * 0.5)
 
 //Material
