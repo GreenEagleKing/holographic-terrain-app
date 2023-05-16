@@ -5,6 +5,7 @@ import terrainVertexShader from "./shaders/terrain/vertex.glsl"
 import terrainFragmentShader from "./shaders/terrain/fragment.glsl"
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer"
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass"
+import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass"
 import { LinearFilter, RGBAFormat, WebGLRenderTarget } from "three"
 
 /**
@@ -22,12 +23,14 @@ const scene = new THREE.Scene()
 const sizes = {
   width: window.innerWidth,
   height: window.innerHeight,
+  pixelRatio: Math.min(window.devicePixelRatio, 2),
 }
 
 window.addEventListener("resize", () => {
   // Update sizes
   sizes.width = window.innerWidth
   sizes.height = window.innerHeight
+  sizes.pixelRatio = Math.min(window.devicePixelRatio, 2)
 
   // Update camera
   camera.aspect = sizes.width / sizes.height
@@ -35,7 +38,15 @@ window.addEventListener("resize", () => {
 
   // Update renderer
   renderer.setSize(sizes.width, sizes.height)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.setPixelRatio(sizes.pixelRatio)
+
+  // Update effect composer
+  effectComposer.setSize(sizes.width, sizes.height)
+  effectComposer.setPixelRatio(sizes.pixelRatio)
+
+  //Update passes
+  bokehPass.renderTargetDepth.width = sizes.width * sizes.pixelRatio
+  bokehPass.renderTargetDepth.height = sizes.height * sizes.pixelRatio
 })
 
 /**
@@ -146,6 +157,8 @@ terrain.material = new THREE.ShaderMaterial({
   uniforms: {
     uTexture: { value: terrain.texture.instance },
     uElevation: { value: 2 },
+    uTextureFrequency: { value: 10 },
+    uTime: { value: 0 },
   },
 })
 
@@ -165,7 +178,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setClearColor(0x111111, 1)
 renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(sizes.width, sizes.height)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+renderer.setPixelRatio(sizes.pixelRatio)
 
 //Effect Composer
 const renderTarget = new THREE.WebGLMultipleRenderTargets(800, 600, {
@@ -176,9 +189,22 @@ const renderTarget = new THREE.WebGLMultipleRenderTargets(800, 600, {
 })
 const effectComposer = new EffectComposer(renderer)
 effectComposer.setSize(sizes.width, sizes.height)
-effectComposer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+effectComposer.setPixelRatio(sizes.pixelRatio)
 
-effectComposer.addPass(new RenderPass(scene, camera))
+// Render Pass
+const renderPass = new RenderPass(scene, camera)
+effectComposer.addPass(renderPass)
+
+//Bokeh Pass
+const bokehPass = new BokehPass(scene, camera, {
+  focus: 1.0,
+  aperture: 0.025,
+  maxblur: 0.01,
+
+  width: sizes.width * sizes.pixelRatio,
+  height: sizes.height * sizes.pixelRatio,
+})
+effectComposer.addPass(bokehPass)
 
 /**
  * Animate
@@ -190,6 +216,9 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime()
   const deltaTime = elapsedTime - lastElapsedTime
   lastElapsedTime = elapsedTime
+
+  //Update terrain
+  terrain.material.uniforms.uTime.value = elapsedTime
 
   // Update controls
   controls.update()
