@@ -111,7 +111,7 @@ terrain.texture.update = () => {
     terrain.texture.height * terrain.texture.bigLineWidth
   )
   terrain.texture.context.globalAlpha = 1
-  terrain.texture.context.fillStyle = "#ffffff"
+  terrain.texture.context.fillStyle = "blue"
   terrain.texture.context.fillRect(
     0,
     0,
@@ -127,6 +127,7 @@ terrain.texture.update = () => {
 
   for (let i = 0; i < smallLinesCount; i++) {
     terrain.texture.context.globalAlpha = terrain.texture.smallLineAlpha
+    terrain.texture.context.fillStyle = "#ffffff"
     terrain.texture.context.fillRect(
       0,
       actualBigLineWidth +
@@ -198,8 +199,8 @@ effectComposer.addPass(renderPass)
 //Bokeh Pass
 const bokehPass = new BokehPass(scene, camera, {
   focus: 1.0,
-  aperture: 0.025,
-  maxblur: 0.01,
+  aperture: 0.015,
+  maxblur: 0.008,
 
   width: sizes.width * sizes.pixelRatio,
   height: sizes.height * sizes.pixelRatio,
