@@ -1,12 +1,13 @@
 import "./style.css"
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
-import terrainVertexShader from "./shaders/terrain/vertex.glsl"
-import terrainFragmentShader from "./shaders/terrain/fragment.glsl"
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer"
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass"
-import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass"
-import { LinearFilter, RGBAFormat, WebGLRenderTarget } from "three"
+import { BokehPass } from "./Passes/BokehPass"
+import terrainVertexShader from "./shaders/terrain/vertex.glsl"
+import terrainFragmentShader from "./shaders/terrain/fragment.glsl"
+import terrainDepthVertexShader from "./shaders/terrainDepth/vertex.glsl"
+import terrainDepthFragmentShader from "./shaders/terrainDepth/fragment.glsl"
 
 /**
  * Base
@@ -111,7 +112,7 @@ terrain.texture.update = () => {
     terrain.texture.height * terrain.texture.bigLineWidth
   )
   terrain.texture.context.globalAlpha = 1
-  terrain.texture.context.fillStyle = "blue"
+  terrain.texture.context.fillStyle = "#ffffff"
   terrain.texture.context.fillRect(
     0,
     0,
@@ -127,7 +128,7 @@ terrain.texture.update = () => {
 
   for (let i = 0; i < smallLinesCount; i++) {
     terrain.texture.context.globalAlpha = terrain.texture.smallLineAlpha
-    terrain.texture.context.fillStyle = "#ffffff"
+    terrain.texture.context.fillStyle = "#0858e2"
     terrain.texture.context.fillRect(
       0,
       actualBigLineWidth +
@@ -148,6 +149,14 @@ terrain.texture.update()
 terrain.geometry = new THREE.PlaneGeometry(1, 1, 1000, 1000)
 terrain.geometry.rotateX(-Math.PI * 0.5)
 
+//Uniforms
+terrain.uniforms = {
+  uTexture: { value: terrain.texture.instance },
+  uElevation: { value: 2 },
+  uTextureFrequency: { value: 10 },
+  uTime: { value: 0 },
+}
+
 //Material
 terrain.material = new THREE.ShaderMaterial({
   transparent: true,
@@ -155,17 +164,32 @@ terrain.material = new THREE.ShaderMaterial({
   side: THREE.DoubleSide,
   vertexShader: terrainVertexShader,
   fragmentShader: terrainFragmentShader,
-  uniforms: {
-    uTexture: { value: terrain.texture.instance },
-    uElevation: { value: 2 },
-    uTextureFrequency: { value: 10 },
-    uTime: { value: 0 },
-  },
+  uniforms: terrain.uniforms,
 })
+
+// Depth Material
+const uniforms = THREE.UniformsUtils.merge([
+  THREE.UniformsLib.common,
+  THREE.UniformsLib.displacementmap,
+])
+
+for (const uniformKey in terrain.uniforms) {
+  uniforms[uniformKey] = terrain.uniforms[uniformKey]
+}
+
+terrain.depthMaterial = new THREE.ShaderMaterial({
+  uniforms: uniforms,
+  vertexShader: terrainDepthVertexShader,
+  fragmentShader: terrainDepthFragmentShader,
+})
+
+terrain.depthMaterial.depthPacking = THREE.RGBADepthPacking
+terrain.depthMaterial.blending = THREE.NoBlending
 
 //Mesh
 terrain.mesh = new THREE.Mesh(terrain.geometry, terrain.material)
 terrain.mesh.scale.set(10, 10, 10)
+terrain.mesh.userData.depthMaterial = terrain.depthMaterial
 scene.add(terrain.mesh)
 
 /**
@@ -174,7 +198,6 @@ scene.add(terrain.mesh)
 // Renderer
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
-  antialias: true,
 })
 renderer.setClearColor(0x111111, 1)
 renderer.outputEncoding = THREE.sRGBEncoding
@@ -199,12 +222,14 @@ effectComposer.addPass(renderPass)
 //Bokeh Pass
 const bokehPass = new BokehPass(scene, camera, {
   focus: 1.0,
-  aperture: 0.015,
-  maxblur: 0.008,
+  aperture: 0.01,
+  maxblur: 0.004,
 
   width: sizes.width * sizes.pixelRatio,
   height: sizes.height * sizes.pixelRatio,
 })
+
+// bokehPass.enabled = false
 effectComposer.addPass(bokehPass)
 
 /**
@@ -219,7 +244,7 @@ const tick = () => {
   lastElapsedTime = elapsedTime
 
   //Update terrain
-  terrain.material.uniforms.uTime.value = elapsedTime
+  terrain.uniforms.uTime.value = elapsedTime
 
   // Update controls
   controls.update()
