@@ -77,6 +77,7 @@ const terrain = {}
 
 // Texture
 terrain.texture = {}
+terrain.texture.visible = false
 terrain.texture.linesCount = 5
 terrain.texture.bigLineWidth = 0.06
 terrain.texture.smallLineWidth = 0.01
@@ -90,7 +91,10 @@ terrain.texture.canvas.style.position = "fixed"
 terrain.texture.canvas.style.top = 0
 terrain.texture.canvas.style.left = 0
 terrain.texture.canvas.style.zIndex = 1
-document.body.append(terrain.texture.canvas)
+
+if (terrain.texture.visible) {
+  document.body.append(terrain.texture.canvas)
+}
 
 terrain.texture.context = terrain.texture.canvas.getContext("2d")
 
@@ -160,7 +164,6 @@ terrain.uniforms = {
 //Material
 terrain.material = new THREE.ShaderMaterial({
   transparent: true,
-  antialias: true,
   side: THREE.DoubleSide,
   vertexShader: terrainVertexShader,
   fragmentShader: terrainFragmentShader,
