@@ -78,7 +78,7 @@ const terrain = {}
 // Texture
 terrain.texture = {}
 terrain.texture.linesCount = 5
-terrain.texture.bigLineWidth = 0.04
+terrain.texture.bigLineWidth = 0.06
 terrain.texture.smallLineWidth = 0.01
 terrain.texture.smallLineAlpha = 0.5
 terrain.texture.width = 32
@@ -160,7 +160,7 @@ terrain.uniforms = {
 //Material
 terrain.material = new THREE.ShaderMaterial({
   transparent: true,
-  blending: THREE.AdditiveBlending,
+  antialias: true,
   side: THREE.DoubleSide,
   vertexShader: terrainVertexShader,
   fragmentShader: terrainFragmentShader,
@@ -222,12 +222,14 @@ effectComposer.addPass(renderPass)
 //Bokeh Pass
 const bokehPass = new BokehPass(scene, camera, {
   focus: 1.0,
-  aperture: 0.01,
-  maxblur: 0.004,
+  aperture: 0.015,
+  maxblur: 0.01,
 
   width: sizes.width * sizes.pixelRatio,
   height: sizes.height * sizes.pixelRatio,
 })
+
+console.log(bokehPass)
 
 // bokehPass.enabled = false
 effectComposer.addPass(bokehPass)
