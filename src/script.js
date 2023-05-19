@@ -216,7 +216,7 @@ const renderTarget = new THREE.WebGLMultipleRenderTargets(800, 600, {
   minFilter: THREE.LinearFilter,
   magFilter: THREE.LinearFilter,
   format: THREE.RGBAFormat,
-  encoding: THREE.sRGBEncoding,
+  // encoding: THREE.sRGBEncoding,
 })
 const effectComposer = new EffectComposer(renderer)
 effectComposer.setSize(sizes.width, sizes.height)
@@ -229,8 +229,8 @@ effectComposer.addPass(renderPass)
 //Bokeh Pass
 const bokehPass = new BokehPass(scene, camera.instance, {
   focus: 1.0,
-  aperture: 0.015,
-  maxblur: 0.01,
+  aperture: 0.01,
+  maxblur: 0.012,
 
   width: sizes.width * sizes.pixelRatio,
   height: sizes.height * sizes.pixelRatio,
@@ -247,7 +247,7 @@ const view = {
   position: {
     x: 2.1,
     y: 0.7,
-    z: 1.7,
+    z: 1.5,
   },
   rotation: { x: -0.667, y: -Math.PI, z: 0 },
 }
@@ -262,7 +262,7 @@ view.parallax.target.y = 0
 view.parallax.eased = {}
 view.parallax.eased.x = 0
 view.parallax.eased.y = 0
-view.parallax.eased.multiplier = 1
+view.parallax.eased.multiplier = 4
 view.parallax.multiplier = 0.1
 
 window.addEventListener("mousemove", (_event) => {
