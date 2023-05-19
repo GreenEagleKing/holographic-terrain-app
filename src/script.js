@@ -199,7 +199,7 @@ scene.add(terrain.mesh)
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
 })
-renderer.setClearColor(0x111111, 1)
+renderer.setClearColor(0x111111, 1) //change bg colour
 renderer.outputEncoding = THREE.sRGBEncoding
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(sizes.pixelRatio)
